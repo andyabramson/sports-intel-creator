@@ -235,7 +235,7 @@ async function runAnalysis() {
 
   // Poll job-status every 4 seconds, up to 3 minutes
   let data = null;
-  const maxAttempts = 45;
+  const maxAttempts = 100;
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(r => setTimeout(r, 4000));
     try {

@@ -47,7 +47,7 @@ function httpPost(rawUrl, headers, bodyStr) {
       res.on('end', function(){ resolve({ status: res.statusCode, body: body }); });
     });
     req.on('error', reject);
-    req.setTimeout(120000, function(){ req.destroy(new Error('Claude API timed out')); });
+    req.setTimeout(300000, function(){ req.destroy(new Error('Claude API timed out')); });
     req.write(data); req.end();
   });
 }
@@ -59,7 +59,7 @@ async function fetchArticle(articleUrl) {
       .replace(/<script[\s\S]*?<\/script>/gi, ' ')
       .replace(/<style[\s\S]*?<\/style>/gi, ' ')
       .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ').trim().slice(0, 1500);
+      .replace(/\s+/g, ' ').trim().slice(0, 2500);
     return { url: articleUrl, content: text, ok: true };
   } catch(err) {
     return { url: articleUrl, content: '[Fetch failed: ' + err.message + ']', ok: false };
