@@ -170,7 +170,7 @@ exports.handler = async function(event) {
   // Import Netlify Blobs
   var getStore;
   try { getStore = require('@netlify/blobs').getStore; } catch(e) { return; }
-  var store = getStore('sports-intel-jobs');
+  var store = getStore({ name: 'sports-intel-jobs', siteID: 'e3ab7454-cd8b-4ab6-b0e5-3b2cebe768c4', token: process.env.NETLIFY_API_TOKEN });
 
   try {
     await store.setJSON(jobId, { status: 'pending', startedAt: Date.now() });
