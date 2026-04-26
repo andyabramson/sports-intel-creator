@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comunicano · Paste & Push</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07070f;--surface:#0f0f22;--border:#20203e;
+  --text:#ddddf0;--muted:#55558a;--dim:#33336a;
+  --accent:#4455cc;--accent-h:#5566dd;
+  --green:#44bb77;--red:#bb4444;--yellow:#aaaa55;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:780px;margin:0 auto;padding:0 0 60px}
+/* Header */
+.hdr{background:linear-gradient(135deg,var(--surface),#13132a);border-bottom:1px solid var(--border);padding:20px 28px;display:flex;justify-content:space-between;align-items:center}
+.hdr-left h1{font-size:20px;font-weight:800;letter-spacing:.3px}
+.hdr-left p{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:1.5px}
+.hdr-right a{font-size:11px;color:var(--dim);text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:5px 11px;transition:all .2s}
+.hdr-right a:hover{color:var(--text);border-color:var(--dim)}
+/* Steps */
+.steps{display:flex;border-bottom:1px solid var(--border);background:var(--surface);padding:0 28px}
+.step{flex:1;padding:10px 0;font-size:11px;font-weight:600;color:var(--dim);text-align:center;border-bottom:2px solid transparent;transition:all .2s}
+.step.active{color:var(--text);border-bottom-color:var(--accent)}
+.step.done{color:var(--green)}
+/* Main */
+.main{padding:24px 28px}
+.section{display:none}
+.section.active{display:block;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* Labels */
+.lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.sublbl{font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.5}
+/* Textarea */
+textarea{width:100%;background:#0d0d1c;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'SF Mono',Menlo,monospace;font-size:12.5px;padding:14px;resize:vertical;line-height:1.6;transition:border-color .2s}
+textarea:focus{outline:none;border-color:var(--accent)}
+.paste-ta{min-height:320px;max-height:520px}
+/* Buttons */
+button{cursor:pointer;border:none;border-radius:8px;font-family:inherit;font-weight:600;font-size:14px;padding:12px 20px;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-h));color:#fff;width:100%;margin-top:14px}
+.btn-primary:hover{filter:brightness(1.15)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;filter:none}
+.btn-secondary{background:#141428;color:#7777bb;border:1px solid var(--border)}
+.btn-secondary:hover{background:#1e1e36;color:#aaaadd}
+.btn-row{display:flex;gap:10px;margin-top:16px}
+.btn-row .btn-primary{flex:1;margin-top:0}
+/* Record cards */
+.records-header{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px}
+.records-header .lbl{margin-bottom:0}
+.rec-count{background:var(--accent);color:#fff;border-radius:12px;padding:2px 9px;font-size:11px;font-weight:700}
+.records-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.rec-card{background:#0b0b1a;border:1px solid #18182e;border-radius:8px;padding:14px;transition:border-color .2s}
+.rec-card:hover{border-color:var(--dim)}
+.rec-card-title{font-size:14px;font-weight:700;margin-bottom:5px;color:var(--text)}
+.rec-meta{font-size:11px;color:var(--muted);margin-bottom:6px}
+.rec-field{font-size:12px;color:#8888aa;line-height:1.5;margin-bottom:5px}
+.rec-field strong{color:#aaaacc;font-weight:600}
+.tags-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.chip{font-size:10px;border-radius:5px;padding:2px 7px;font-weight:500}
+.chip-cat{background:#1a1a3a;border:1px solid #2a2a5a;color:#8888cc}
+.chip-tag{background:#121228;border:1px solid #1e1e3e;color:var(--dim)}
+/* Results */
+.result-item{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #0f0f20;font-size:13px}
+.result-ok .ri{color:var(--green);font-size:16px}
+.result-fail .ri{color:var(--red);font-size:16px}
+.result-err-msg{font-size:11px;color:#774444;margin-top:3px}
+.success-box{background:#071510;border:1px solid #1a4429;border-radius:8px;padding:16px;color:var(--green);font-size:14px;text-align:center;margin-top:18px;font-weight:600}
+.error-box{background:#130607;border:1px solid #361418;border-radius:8px;padding:14px;color:#cc7777;font-size:13px;margin-top:14px}
+.warn-box{background:#0d0d06;border:1px solid #282810;border-radius:7px;padding:11px 14px;color:var(--yellow);font-size:12px;margin-bottom:12px}
+.notion-link{font-size:11px;color:#5555aa;text-decoration:none;display:inline-block;margin-top:3px}
+.notion-link:hover{color:#8888dd;text-decoration:underline}
+/* Format hint */
+.format-hint{background:#0b0b1e;border:1px solid #18183a;border-radius:8px;padding:14px 16px;margin-top:16px;font-size:11px;color:var(--dim);line-height:1.8}
+.format-hint code{color:#7777bb;background:#06060f;border-radius:3px;padding:1px 5px;font-size:10px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>📋 Paste &amp; Push to Notion</h1>
+    <p>Onion Process · Direct Notion Push · Comunicano</p>
+  </div>
+  <div class="hdr-right">
+    <a href="/">← Main App</a>
+  </div>
+</div>
+
+<div class="steps">
+  <div class="step active" id="step1">1. Paste Output</div>
+  <div class="step" id="step2">2. Review Records</div>
+  <div class="step" id="step3">3. Published</div>
+</div>
+
+<div class="main">
+
+  <!-- Section 1: Paste -->
+  <div class="section active" id="s1">
+    <div class="lbl">Paste Onion Process Output</div>
+    <div class="sublbl">
+      Run your analysis in Claude, copy the full output, and paste it here. The app will find the structured records block and parse all 15 fields automatically.
+    </div>
+    <textarea class="paste-ta" id="pasteInput"
+      placeholder="Paste the full Claude output here — it should include the ===NOTION RECORDS=== block at the end..."></textarea>
+
+    <button class="btn-primary" onclick="parseOutput()">Parse Records →</button>
+
+    <div class="format-hint">
+      <strong style="color:#5555aa">Expected format at end of output:</strong><br>
+      <code>===NOTION RECORDS===</code><br>
+      <code>---RECORD 1---</code><br>
+      <code>TITLE: ...</code> &nbsp;·&nbsp; <code>SUMMARY: ...</code> &nbsp;·&nbsp; <code>INSIGHT: ...</code> &nbsp;·&nbsp; etc.<br>
+      <code>---END RECORD 1---</code><br>
+      <code>===END RECORDS===</code>
+    </div>
+  </div>
+
+  <!-- Section 2: Review -->
+  <div class="section" id="s2">
+    <div class="records-header">
+      <div class="lbl">Parsed Records</div>
+      <span class="rec-count" id="recCountBadge">0</span>
+    </div>
+    <div class="records-grid" id="recordsGrid"></div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goTo(1)">← Back</button>
+      <button class="btn-primary" onclick="pushToNotion()">Push to Notion →</button>
+    </div>
+  </div>
+
+  <!-- Section 3: Results -->
+  <div class="section" id="s3">
+    <div class="lbl">Notion Publish Results</div>
+    <div id="resultsList"></div>
+    <button class="btn-primary" onclick="startOver()" style="margin-top:20px">Paste Another Report</button>
+  </div>
+
+</div>
+
+<script>
+/* ── State ─────────────────────────────────────────────────────────── */
+let RECORDS = [];
+
+/* ── Navigation ────────────────────────────────────────────────────── */
+function goTo(n) {
+  document.querySelectorAll('.section').forEach((el, i) => el.classList.toggle('active', i + 1 === n));
+  document.querySelectorAll('.step').forEach((el, i) => {
+    el.classList.toggle('active', i + 1 === n);
+    el.classList.toggle('done', i + 1 < n);
+  });
+}
+
+function startOver() {
+  RECORDS = [];
+  document.getElementById('pasteInput').value = '';
+  document.getElementById('recordsGrid').innerHTML = '';
+  goTo(1);
+}
+
+/* ── fieldVal: same logic as analyze-background.js ─────────────────── */
+function fieldVal(block, key) {
+  var lines = block.split('\n'), val = '', collecting = false;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].replace(/\*\*/g, ''); // strip markdown bold
+    var km = line.match(new RegExp('^' + key + ':\\s*(.*)', 'i'));
+    if (km) { val = km[1].trim(); collecting = true; continue; }
+    if (collecting) {
+      var bare = line.replace(/\*\*/g, '');
+      if (/^[A-Z_]+:/.test(bare) || /^---/.test(bare.trim())) break;
+      var t = bare.trim(); if (t) val += ' ' + t;
+    }
+  }
+  return val.trim();
+}
+
+/* ── Parse pasted output ───────────────────────────────────────────── */
+function parseOutput() {
+  const raw = document.getElementById('pasteInput').value;
+  if (!raw.trim()) { alert('Nothing pasted yet.'); return; }
+
+  // Find the NOTION RECORDS block
+  const bm = raw.match(/===NOTION RECORDS===([\s\S]*?)===END RECORDS===/);
+  if (!bm) {
+    alert('No ===NOTION RECORDS=== block found.\n\nMake sure to copy the full Claude output including the structured records section at the end.');
+    return;
+  }
+
+  const blockRaw = bm[1];
+  const records = [];
+  const pat = /---RECORD \d+---([\s\S]*?)---END RECORD \d+---/g;
+  let m;
+  while ((m = pat.exec(blockRaw)) !== null) {
+    const blk = m[1];
+    records.push({
+      title:               fieldVal(blk, 'TITLE'),
+      summary:             fieldVal(blk, 'SUMMARY'),
+      insight:             fieldVal(blk, 'INSIGHT'),
+      opinion:             fieldVal(blk, 'OPINION'),
+      perspective:         fieldVal(blk, 'PERSPECTIVE'),
+      publication:         fieldVal(blk, 'PUBLICATION'),
+      sourceUrl:           fieldVal(blk, 'SOURCE_URL'),
+      date:                fieldVal(blk, 'DATE'),
+      category:            fieldVal(blk, 'CATEGORY'),
+      tags:                fieldVal(blk, 'TAGS'),
+      governingBodies:     fieldVal(blk, 'GOVERNING_BODIES'),
+      sponsorshipCategory: fieldVal(blk, 'SPONSORSHIP_CATEGORY'),
+      teams:               fieldVal(blk, 'TEAMS'),
+      watchList:           fieldVal(blk, 'WATCH_LIST'),
+      status:              fieldVal(blk, 'STATUS') || 'Source Captured',
+    });
+  }
+
+  if (!records.length) {
+    alert('Found the NOTION RECORDS block but could not parse individual records.\n\nCheck that records use the ---RECORD N--- / ---END RECORD N--- wrapper format.');
+    return;
+  }
+
+  RECORDS = records;
+  buildReview();
+  goTo(2);
+}
+
+/* ── Build review cards ────────────────────────────────────────────── */
+function buildReview() {
+  document.getElementById('recCountBadge').textContent = RECORDS.length;
+  const grid = document.getElementById('recordsGrid');
+
+  if (!RECORDS.length) {
+    grid.innerHTML = '<div class="warn-box">No records to display.</div>';
+    return;
+  }
+
+  grid.innerHTML = RECORDS.map((r, i) => {
+    const catChips = r.category
+      ? r.category.split(',').map(c => `<span class="chip chip-cat">${esc(c.trim())}</span>`).join('')
+      : '';
+    const tagChips = r.tags
+      ? r.tags.split(',').map(t => `<span class="chip chip-tag">${esc(t.trim())}</span>`).join('')
+      : '';
+    const fields = [
+      r.insight     && `<div class="rec-field"><strong>Insight:</strong> ${esc(r.insight.slice(0,160))}${r.insight.length>160?'…':''}</div>`,
+      r.opinion     && `<div class="rec-field"><strong>Opinion:</strong> ${esc(r.opinion.slice(0,160))}${r.opinion.length>160?'…':''}</div>`,
+      r.perspective && `<div class="rec-field"><strong>Perspective:</strong> ${esc(r.perspective.slice(0,120))}${r.perspective.length>120?'…':''}</div>`,
+      r.watchList   && `<div class="rec-field"><strong>Watch List:</strong> ${esc(r.watchList.slice(0,120))}${r.watchList.length>120?'…':''}</div>`,
+    ].filter(Boolean).join('');
+
+    return `
+      <div class="rec-card">
+        <div class="rec-card-title">${esc(r.title || 'Record ' + (i + 1))}</div>
+        <div class="rec-meta">${esc(r.publication || '—')} &middot; ${esc(r.date || '—')} &middot; ${esc(r.status)}</div>
+        <div class="rec-field" style="margin-bottom:8px">${esc((r.summary || '').slice(0, 180))}${(r.summary||'').length>180?'…':''}</div>
+        ${fields}
+        ${catChips || tagChips ? `<div class="tags-row">${catChips}${tagChips}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+/* ── Push to Notion ────────────────────────────────────────────────── */
+async function pushToNotion() {
+  if (!RECORDS.length) { alert('No records to push.'); return; }
+
+  goTo(3);
+  const list = document.getElementById('resultsList');
+  list.innerHTML = '';
+
+  // Show pending state immediately
+  const divs = RECORDS.map((rec) => {
+    const d = document.createElement('div');
+    d.className = 'result-item';
+    d.innerHTML = `<span class="ri">⏳</span><div><div>${esc(rec.title || 'Untitled')}</div></div>`;
+    list.appendChild(d);
+    return d;
+  });
+
+  let data;
+  try {
+    const res = await fetch('/.netlify/functions/push-notion', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ records: RECORDS }),
+    });
+    data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  } catch (err) {
+    list.innerHTML = '';
+    const eb = document.createElement('div');
+    eb.className = 'error-box';
+    eb.textContent = 'Push failed: ' + err.message;
+    list.appendChild(eb);
+    return;
+  }
+
+  let successCount = 0;
+  (data.results || []).forEach((r, i) => {
+    const d = divs[i];
+    if (!d) return;
+    if (r.ok) {
+      d.className = 'result-item result-ok';
+      d.querySelector('.ri').textContent = '✓';
+      if (r.url) {
+        const a = document.createElement('a');
+        a.href = r.url; a.target = '_blank';
+        a.className = 'notion-link';
+        a.textContent = 'Open in Notion →';
+        d.querySelector('div > div').appendChild(a);
+      }
+      successCount++;
+    } else {
+      d.className = 'result-item result-fail';
+      d.querySelector('.ri').textContent = '✗';
+      const em = document.createElement('div');
+      em.className = 'result-err-msg';
+      em.textContent = r.error || 'Unknown error';
+      d.querySelector('div').appendChild(em);
+    }
+  });
+
+  const summary = document.createElement('div');
+  summary.className = successCount === RECORDS.length ? 'success-box' : 'error-box';
+  summary.textContent = successCount === RECORDS.length
+    ? `✓ ${successCount} record${successCount !== 1 ? 's' : ''} published to Notion`
+    : `${successCount}/${RECORDS.length} records succeeded`;
+  list.appendChild(summary);
+}
+
+/* ── Helpers ───────────────────────────────────────────────────────── */
+function esc(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+</script>
+</body>
+</html>
