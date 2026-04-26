@@ -83,6 +83,12 @@ button{cursor:pointer;border:none;border-radius:8px;font-family:inherit;font-wei
 /* Notion links */
 .notion-link{font-size:11px;color:#5555aa;text-decoration:none;display:inline-block;margin-top:3px}
 .notion-link:hover{color:#8888dd;text-decoration:underline}
+/* Copy toolbar */
+.copy-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.copy-bar .lbl{margin-bottom:0;flex:1}
+.btn-copy{background:#0f0f22;border:1px solid var(--border);color:#7777bb;border-radius:6px;font-size:11px;font-weight:700;padding:6px 12px;letter-spacing:.5px;text-transform:uppercase;display:flex;align-items:center;gap:5px;transition:all .2s}
+.btn-copy:hover{background:#1a1a32;border-color:var(--accent);color:#aaaaee}
+.btn-copy.copied{background:#0d2018;border-color:var(--green);color:var(--green)}
 </style>
 </head>
 <body>
@@ -120,7 +126,12 @@ button{cursor:pointer;border:none;border-radius:8px;font-family:inherit;font-wei
 
   <!-- Section 3: Review -->
   <div class="section" id="s3">
-    <div class="lbl">Editorial Report — edit before publishing</div>
+    <div class="copy-bar">
+      <div class="lbl">Editorial Report — edit before publishing</div>
+      <button class="btn-copy" id="cpMd"   onclick="copyReport('md')"  title="Copy as Markdown">⬇ MD</button>
+      <button class="btn-copy" id="cpTxt"  onclick="copyReport('txt')" title="Copy as Plain Text">⬇ TXT</button>
+      <button class="btn-copy" id="cpHtml" onclick="copyReport('html')" title="Copy as HTML">⬇ HTML</button>
+    </div>
     <textarea class="rpt-ta" id="reportArea"></textarea>
 
     <div class="records-header">
@@ -365,6 +376,87 @@ async function publishToNotion() {
     ? `✓ ${successCount} record${successCount !== 1 ? 's' : ''} published to Notion`
     : `${successCount}/${records.length} records succeeded`;
   list.appendChild(summary);
+}
+
+/* ── Copy helpers ──────────────────────────────────────────────────── */
+function copyReport(fmt) {
+  const md = document.getElementById('reportArea').value;
+  let output;
+
+  if (fmt === 'md') {
+    // Raw markdown — copy as-is
+    output = md;
+
+  } else if (fmt === 'txt') {
+    // Strip all markdown: bold, headers, horizontal rules
+    output = md
+      .replace(/\*\*(.*?)\*\*/g, '$1')       // **bold** → bold
+      .replace(/^#{1,6}\s+/gm, '')           // # headers
+      .replace(/^[-*]{3,}\s*$/gm, '---')     // *** or --- → plain dash line
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [text](url) → text
+      .replace(/`([^`]+)`/g, '$1');           // `code` → code
+
+  } else if (fmt === 'html') {
+    // Convert markdown to clean HTML
+    const lines = md.split('\n');
+    const htmlLines = [];
+    let inP = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+
+      // Horizontal rule
+      if (/^[-*]{3,}\s*$/.test(line.trim())) {
+        if (inP) { htmlLines.push('</p>'); inP = false; }
+        htmlLines.push('<hr>');
+        continue;
+      }
+
+      // H1–H3
+      const hm = line.match(/^(#{1,3})\s+(.*)/);
+      if (hm) {
+        if (inP) { htmlLines.push('</p>'); inP = false; }
+        const lvl = hm[1].length;
+        htmlLines.push(`<h${lvl}>${mdInline(hm[2])}</h${lvl}>`);
+        continue;
+      }
+
+      // Blank line = paragraph break
+      if (!line.trim()) {
+        if (inP) { htmlLines.push('</p>'); inP = false; }
+        continue;
+      }
+
+      // Regular text line
+      const inline = mdInline(line);
+      if (!inP) { htmlLines.push('<p>'); inP = true; }
+      else       { htmlLines.push('<br>'); }
+      htmlLines.push(inline);
+    }
+    if (inP) htmlLines.push('</p>');
+
+    output = '<!DOCTYPE html>\n<html>\n<body style="font-family:Georgia,serif;max-width:680px;margin:40px auto;line-height:1.7;color:#1a1a2a">\n'
+           + htmlLines.join('\n')
+           + '\n</body>\n</html>';
+  }
+
+  navigator.clipboard.writeText(output).then(() => {
+    const btnId = fmt === 'md' ? 'cpMd' : fmt === 'txt' ? 'cpTxt' : 'cpHtml';
+    const btn = document.getElementById(btnId);
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => alert('Copy failed — try selecting text manually.'));
+}
+
+function mdInline(s) {
+  return s
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
 }
 
 /* ── Helpers ───────────────────────────────────────────────────────── */
