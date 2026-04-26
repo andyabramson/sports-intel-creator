@@ -120,12 +120,13 @@ function buildPrompt(articles, today) {
 function fieldVal(block, key) {
   var lines = block.split('\n'), val = '', collecting = false;
   for (var i = 0; i < lines.length; i++) {
-    var line = lines[i];
-    var km = line.match(new RegExp('^'+key+':\\s*(.+)','i'));
+    var line = lines[i].replace(/\*\*/g, '');  // strip markdown bold
+    var km = line.match(new RegExp('^'+key+':\\s*(.*)','i'));
     if (km) { val = km[1].trim(); collecting = true; continue; }
     if (collecting) {
-      if (/^[A-Z_]+:/.test(line) || /^---/.test(line.trim())) break;
-      var t = line.trim(); if (t) val += ' ' + t;
+      var bare = line.replace(/\*\*/g,'');
+      if (/^[A-Z_]+:/.test(bare) || /^---/.test(bare.trim())) break;
+      var t = bare.trim(); if (t) val += ' ' + t;
     }
   }
   return val.trim();
