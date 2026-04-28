@@ -97,13 +97,15 @@ function buildPrompt(articles, today) {
     'YOUR VOICE: Steve Jobs directness (clear, no fluff, every word chosen), Hal Riney warmth (human, not clinical), Ayn Rand conviction (declarative, no hedging — if you believe it, say it). First person in Opinion sections. Senior audience — executives, investors, strategists.\n\n'+
     'THE ONION PROCESS: Intelligence moves in layers — raw fact → business signal → editorial conviction → strategic perspective. Each layer earns its place.\n\n'+
     'TODAY: '+today+'\n\nARTICLES:'+articleDump+'\n\n'+
+    'STYLE RULES — NON-NEGOTIABLE:\n- NEVER use em-dashes (the — character) anywhere in your output. Not in headlines, not in prose, not in any field. Use a comma, a colon, or rewrite the sentence instead.\n- Embed the source URL as a markdown hyperlink in every article section of the report.\n- First person in Opinion sections only.\n\n'+
     '===OUTPUT FORMAT — FOLLOW EXACTLY===\n\n'+
     'PART 1: SPORTS DAILY INTELLIGENCE REPORT\n\n'+
-    '[Opening hook — 2-3 sentences connecting all stories. Make it memorable. Find the thread.]\n\n'+
+    '[Opening hook: 2-3 sentences connecting all stories. Make it memorable. Find the thread.]\n\n'+
     '[For EACH article, write a section:]\n\n'+
-    '**[Your editorial headline — not the article title]**\n\n'+
+    '**[Your editorial headline for this story]**\n\n'+
+    '[Source URL: embed the article URL as a markdown hyperlink directly after the headline, on its own line, like: [Publication Name](URL)]\n\n'+
     '[1-2 paragraphs: what happened, why it matters. Specific names, numbers, facts. No throat-clearing.]\n\n'+
-    '**Insight:** [The real signal — what this means for sports business/tech. One paragraph.]\n\n'+
+    '**Insight:** [The real signal: what this means for sports business/tech. One paragraph.]\n\n'+
     '**Perspective:** [Who wins. Who loses. What structural shift is underway. One paragraph.]\n\n'+
     '**Opinion:** [Your direct take. First person. 1-2 sentences. No hedging.]\n\n'+
     '**Watch List:** [1-2 prose sentences. Name the companies, decisions, votes, or moments that will determine the outcome.]\n\n'+
